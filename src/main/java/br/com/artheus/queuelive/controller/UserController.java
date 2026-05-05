@@ -1,5 +1,6 @@
 package br.com.artheus.queuelive.controller;
 
+import br.com.artheus.queuelive.dto.UserResponse;
 import br.com.artheus.queuelive.entity.User;
 import br.com.artheus.queuelive.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,8 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
-    public ResponseEntity<User> me(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<UserResponse> me(@AuthenticationPrincipal Jwt jwt) {
         User user = userService.syncUser(jwt);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(userService.toResponse(user));
     }
 }

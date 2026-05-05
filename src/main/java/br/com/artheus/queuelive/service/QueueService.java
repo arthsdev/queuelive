@@ -8,6 +8,7 @@ import br.com.artheus.queuelive.enums.QueueStatus;
 import br.com.artheus.queuelive.repository.QueueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class QueueService {
         return toResponse(queueRepository.save(queue));
     }
 
+    @Transactional(readOnly = true)
     public List<QueueResponse> findAll() {
         return queueRepository.findAll()
                 .stream()
@@ -33,6 +35,7 @@ public class QueueService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<QueueResponse> findAllOpen() {
         return queueRepository.findByStatus(QueueStatus.OPEN)
                 .stream()

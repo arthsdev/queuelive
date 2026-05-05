@@ -1,5 +1,6 @@
 package br.com.artheus.queuelive.service;
 
+import br.com.artheus.queuelive.dto.UserResponse;
 import br.com.artheus.queuelive.entity.User;
 import br.com.artheus.queuelive.enums.Role;
 import br.com.artheus.queuelive.repository.UserRepository;
@@ -39,5 +40,15 @@ public class UserService {
                     .orElse("CLIENT");
         }
         return "CLIENT";
+    }
+
+    public UserResponse toResponse(User user) {
+        return new UserResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole(),
+                user.getCreatedAt()
+        );
     }
 }

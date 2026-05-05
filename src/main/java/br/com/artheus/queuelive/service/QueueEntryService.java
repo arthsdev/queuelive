@@ -65,6 +65,7 @@ public class QueueEntryService {
         return toResponse(next);
     }
 
+    @Transactional(readOnly = true)
     public List<QueueEntryResponse> findAllByQueue(Long queueId) {
         return queueEntryRepository.findByQueueIdOrderByPositionAsc(queueId)
                 .stream()

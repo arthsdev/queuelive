@@ -1,5 +1,6 @@
 package br.com.artheus.queuelive.service;
 
+import br.com.artheus.queuelive.config.QueueEventPublisher;
 import br.com.artheus.queuelive.dto.QueueEntryResponse;
 import br.com.artheus.queuelive.entity.Queue;
 import br.com.artheus.queuelive.entity.QueueEntry;
@@ -19,6 +20,7 @@ public class QueueEntryService {
 
     private final QueueEntryRepository queueEntryRepository;
     private final QueueService queueService;
+    private final QueueEventPublisher eventPublisher;
 
     @Transactional
     public QueueEntryResponse join(Long queueId, User user) {
@@ -40,7 +42,13 @@ public class QueueEntryService {
                 .position(position)
                 .build();
 
-        return toResponse(queueEntryRepository.save(entry));
+        queueEntryRepository.save(entry);
+
+        // Notifies all connected clients about the queue update
+        List<QueueEntryResponse> entries = findAllByQueue(queueId);
+        eventPublisher.publishQueueUpdated(queueId, entries);
+
+        return toResponse(entry);
     }
 
     @Transactional
@@ -61,6 +69,13 @@ public class QueueEntryService {
 
         // Recalculates positions for all remaining WAITING entries
         recalculatePositions(queueId);
+
+        // Notifies all connected clients about who was called
+        eventPublisher.publishUserCalled(queueId, toResponse(next));
+
+        // Notifies all connected clients about the updated queue
+        List<QueueEntryResponse> entries = findAllByQueue(queueId);
+        eventPublisher.publishQueueUpdated(queueId, entries);
 
         return toResponse(next);
     }

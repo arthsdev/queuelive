@@ -14,5 +14,20 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: queuelive-keycloak
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    ports:
+      - "8180:8080"
+    command: start-dev
+    depends_on:
+      - mysql
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+
 volumes:
   mysql_data:
+  keycloak_data:

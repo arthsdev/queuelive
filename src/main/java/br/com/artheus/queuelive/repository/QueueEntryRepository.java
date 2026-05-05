@@ -12,7 +12,7 @@ public interface QueueEntryRepository extends JpaRepository<QueueEntry, Long> {
 
     List<QueueEntry> findByQueueIdOrderByPositionAsc(Long queueId);
 
-    List<QueueEntry> findQueueIdAndStatus (Long queueId, QueueStatus status);
+    List<QueueEntry> findByQueueIdAndStatus(Long queueId, EntryStatus status);
 
     Optional<QueueEntry> findFirstByQueueIdAndStatusOrderByPositionAsc(Long queueId, EntryStatus status);
 

@@ -36,6 +36,10 @@ public class Queue {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    public void close() {
+        this.status = QueueStatus.CLOSED;
+    }
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();

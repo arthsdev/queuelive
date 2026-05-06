@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -25,12 +26,14 @@ public class QueueEntryService {
     private final QueueEventPublisher eventPublisher;
 
     @Transactional
-    public QueueEntryResponse join(Long queueId, User user) {
-        Queue queue = queueService.findById(queueId);
+    public QueueEntryResponse join(UUID queueId, User user) {
 
+        // Validates role before any database query
         if (user.getRole() == Role.STAFF) {
             throw QueueEntryException.staffCannotJoin();
         }
+
+        Queue queue = queueService.findById(queueId);
 
         if (queue.getStatus().isClosed()) {
             throw QueueException.isClosed();
@@ -58,7 +61,7 @@ public class QueueEntryService {
     }
 
     @Transactional
-    public QueueEntryResponse callNext(Long queueId) {
+    public QueueEntryResponse callNext(UUID queueId) {
         Queue queue = queueService.findById(queueId);
 
         if (queue.getStatus().isClosed()) {
@@ -87,14 +90,14 @@ public class QueueEntryService {
     }
 
     @Transactional(readOnly = true)
-    public List<QueueEntryResponse> findAllByQueue(Long queueId) {
+    public List<QueueEntryResponse> findAllByQueue(UUID queueId) {
         return queueEntryRepository.findByQueueIdOrderByPositionAsc(queueId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    private void recalculatePositions(Long queueId) {
+    private void recalculatePositions(UUID queueId) {
         List<QueueEntry> waiting = queueEntryRepository
                 .findByQueueIdAndStatus(queueId, EntryStatus.WAITING);
 

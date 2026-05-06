@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -44,12 +45,12 @@ public class QueueService {
                 .toList();
     }
 
-    public Queue findById(Long id) {
+    public Queue findById(UUID id) {
         return queueRepository.findById(id)
                 .orElseThrow(QueueException::notFound);
     }
 
-    public QueueResponse close(Long id) {
+    public QueueResponse close(UUID id) {
         Queue queue = findById(id);
 
         if (queue.getStatus().isClosed()) {
@@ -62,7 +63,7 @@ public class QueueService {
     }
 
     @Transactional(readOnly = true)
-    public QueueResponse findByIdAsResponse(Long id) {
+    public QueueResponse findByIdAsResponse(UUID id) {
         return toResponse(findById(id));
     }
 

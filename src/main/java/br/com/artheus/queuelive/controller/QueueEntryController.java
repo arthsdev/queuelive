@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/queues")
@@ -23,7 +24,7 @@ public class QueueEntryController {
 
     @PostMapping("/{id}/join")
     public ResponseEntity<QueueEntryResponse> join(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
 
         User user = userService.syncUser(jwt);
@@ -31,13 +32,13 @@ public class QueueEntryController {
     }
 
     @GetMapping("/{id}/entries")
-    public ResponseEntity<List<QueueEntryResponse>> entries(@PathVariable Long id) {
+    public ResponseEntity<List<QueueEntryResponse>> entries(@PathVariable UUID id) {
         return ResponseEntity.ok(queueEntryService.findAllByQueue(id));
     }
 
     @PostMapping("/{id}/next")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<QueueEntryResponse> callNext(@PathVariable Long id) {
+    public ResponseEntity<QueueEntryResponse> callNext(@PathVariable UUID id) {
         return ResponseEntity.ok(queueEntryService.callNext(id));
     }
 }

@@ -7,16 +7,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface QueueEntryRepository extends JpaRepository<QueueEntry, Long> {
+public interface QueueEntryRepository extends JpaRepository<QueueEntry, UUID> {
 
-    List<QueueEntry> findByQueueIdOrderByPositionAsc(Long queueId);
+    List<QueueEntry> findByQueueIdOrderByPositionAsc(UUID queueId);
 
-    List<QueueEntry> findByQueueIdAndStatus(Long queueId, EntryStatus status);
+    List<QueueEntry> findByQueueIdAndStatus(UUID queueId, EntryStatus status);
 
-    Optional<QueueEntry> findFirstByQueueIdAndStatusOrderByPositionAsc(Long queueId, EntryStatus status);
+    Optional<QueueEntry> findFirstByQueueIdAndStatusOrderByPositionAsc(UUID queueId, EntryStatus status);
 
-    boolean existsByQueueIdAndUserId(Long queueId, Long userId);
+    boolean existsByQueueIdAndUserId(UUID queueId, UUID userId);
 
-    int countByQueueIdAndStatus(Long queueId, EntryStatus status);
+    int countByQueueIdAndStatus(UUID queueId, EntryStatus status);
 }

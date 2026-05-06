@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/queues")
@@ -39,13 +40,13 @@ public class QueueController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<QueueResponse> findById(@PathVariable Long id) {
+    public ResponseEntity<QueueResponse> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(queueService.findByIdAsResponse(id));
     }
 
     @PatchMapping("/{id}/close")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<QueueResponse> close(@PathVariable Long id) {
+    public ResponseEntity<QueueResponse> close(@PathVariable UUID id) {
         return ResponseEntity.ok(queueService.close(id));
     }
 }

@@ -1,7 +1,7 @@
 package br.com.artheus.queuelive.controller;
 
-import br.com.artheus.queuelive.dto.QueueRequest;
-import br.com.artheus.queuelive.dto.QueueResponse;
+import br.com.artheus.queuelive.dto.queue.QueueRequest;
+import br.com.artheus.queuelive.dto.queue.QueueResponse;
 import br.com.artheus.queuelive.entity.User;
 import br.com.artheus.queuelive.service.QueueService;
 import br.com.artheus.queuelive.service.UserService;

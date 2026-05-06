@@ -1,6 +1,6 @@
 package br.com.artheus.queuelive.controller;
 
-import br.com.artheus.queuelive.dto.UserResponse;
+import br.com.artheus.queuelive.dto.user.UserResponse;
 import br.com.artheus.queuelive.entity.User;
 import br.com.artheus.queuelive.service.UserService;
 import lombok.RequiredArgsConstructor;

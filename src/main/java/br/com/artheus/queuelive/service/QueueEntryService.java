@@ -1,12 +1,14 @@
 package br.com.artheus.queuelive.service;
 
 import br.com.artheus.queuelive.config.QueueEventPublisher;
-import br.com.artheus.queuelive.dto.QueueEntryResponse;
+import br.com.artheus.queuelive.dto.queue.QueueEntryResponse;
 import br.com.artheus.queuelive.entity.Queue;
 import br.com.artheus.queuelive.entity.QueueEntry;
 import br.com.artheus.queuelive.entity.User;
 import br.com.artheus.queuelive.enums.EntryStatus;
-import br.com.artheus.queuelive.enums.QueueStatus;
+import br.com.artheus.queuelive.enums.Role;
+import br.com.artheus.queuelive.exception.domain.QueueEntryException;
+import br.com.artheus.queuelive.exception.domain.QueueException;
 import br.com.artheus.queuelive.repository.QueueEntryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,12 +28,16 @@ public class QueueEntryService {
     public QueueEntryResponse join(Long queueId, User user) {
         Queue queue = queueService.findById(queueId);
 
-        if (queue.getStatus() == QueueStatus.CLOSED) {
-            throw new RuntimeException("Queue is closed");
+        if (user.getRole() == Role.STAFF) {
+            throw QueueEntryException.staffCannotJoin();
+        }
+
+        if (queue.getStatus().isClosed()) {
+            throw QueueException.isClosed();
         }
 
         if (queueEntryRepository.existsByQueueIdAndUserId(queueId, user.getId())) {
-            throw new RuntimeException("User already in queue");
+            throw QueueEntryException.userAlreadyInQueue();
         }
 
         int position = queueEntryRepository.countByQueueIdAndStatus(queueId, EntryStatus.WAITING) + 1;
@@ -55,14 +61,14 @@ public class QueueEntryService {
     public QueueEntryResponse callNext(Long queueId) {
         Queue queue = queueService.findById(queueId);
 
-        if (queue.getStatus() == QueueStatus.CLOSED) {
-            throw new RuntimeException("Queue is closed");
+        if (queue.getStatus().isClosed()) {
+            throw QueueException.isClosed();
         }
 
         // Gets the first WAITING entry ordered by position
         QueueEntry next = queueEntryRepository
                 .findFirstByQueueIdAndStatusOrderByPositionAsc(queueId, EntryStatus.WAITING)
-                .orElseThrow(() -> new RuntimeException("No users waiting in queue"));
+                .orElseThrow(QueueException::noUsersWaiting);
 
         next.call();
         queueEntryRepository.save(next);

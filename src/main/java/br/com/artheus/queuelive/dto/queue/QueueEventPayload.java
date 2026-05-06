@@ -1,4 +1,4 @@
-package br.com.artheus.queuelive.dto;
+package br.com.artheus.queuelive.dto.queue;
 
 import java.util.List;
 

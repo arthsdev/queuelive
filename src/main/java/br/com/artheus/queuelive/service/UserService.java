@@ -1,6 +1,6 @@
 package br.com.artheus.queuelive.service;
 
-import br.com.artheus.queuelive.dto.UserResponse;
+import br.com.artheus.queuelive.dto.user.UserResponse;
 import br.com.artheus.queuelive.entity.User;
 import br.com.artheus.queuelive.enums.Role;
 import br.com.artheus.queuelive.repository.UserRepository;

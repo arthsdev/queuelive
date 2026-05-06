@@ -1,7 +1,7 @@
 package br.com.artheus.queuelive.config;
 
-import br.com.artheus.queuelive.dto.QueueEntryResponse;
-import br.com.artheus.queuelive.dto.QueueEventPayload;
+import br.com.artheus.queuelive.dto.queue.QueueEntryResponse;
+import br.com.artheus.queuelive.dto.queue.QueueEventPayload;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;

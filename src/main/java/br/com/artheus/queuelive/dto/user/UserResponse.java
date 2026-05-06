@@ -1,4 +1,4 @@
-package br.com.artheus.queuelive.dto;
+package br.com.artheus.queuelive.dto.user;
 
 import br.com.artheus.queuelive.enums.Role;
 import java.time.LocalDateTime;

@@ -25,6 +25,8 @@
 - 🎟️ **Join queue** — Clients join and receive an automatically calculated position
 - ⚡ **Real-time via WebSocket** — All connected clients receive instant updates when someone joins or gets called
 - 🔄 **Automatic position recalculation** — When the next user is called, all positions are updated without gaps
+- 🌐 **i18n error messages** — Error responses respect the `Accept-Language` header (en-US / pt-BR)
+- 🚫 **Domain exceptions** — Structured error responses with error code, message and HTTP status
 
 ---
 
@@ -64,6 +66,7 @@
 ```
 src/main/java/br/com/artheus/queuelive/
 ├── config/
+│   ├── MessageSourceConfig.java    # i18n configuration
 │   ├── SecurityConfig.java         # Spring Security + OAuth2
 │   ├── WebSocketConfig.java        # STOMP + SockJS
 │   └── QueueEventPublisher.java    # WebSocket event publishing
@@ -72,11 +75,13 @@ src/main/java/br/com/artheus/queuelive/
 │   ├── QueueController.java
 │   └── QueueEntryController.java
 ├── dto/
-│   ├── UserResponse.java
-│   ├── QueueRequest.java
-│   ├── QueueResponse.java
-│   ├── QueueEntryResponse.java
-│   └── QueueEventPayload.java
+│   ├── queue/
+│   │   ├── QueueRequest.java
+│   │   ├── QueueResponse.java
+│   │   ├── QueueEntryResponse.java
+│   │   └── QueueEventPayload.java
+│   └── user/
+│       └── UserResponse.java
 ├── entity/
 │   ├── User.java
 │   ├── Queue.java
@@ -85,6 +90,15 @@ src/main/java/br/com/artheus/queuelive/
 │   ├── Role.java                   # CLIENT, STAFF
 │   ├── QueueStatus.java            # OPEN, CLOSED
 │   └── EntryStatus.java            # WAITING, CALLED, SERVED
+├── exception/
+│   ├── ApiError.java               # Centralized error keys
+│   ├── GlobalExceptionHandler.java # @RestControllerAdvice
+│   ├── base/
+│   │   └── BaseException.java
+│   └── domain/
+│       ├── QueueException.java
+│       ├── QueueEntryException.java
+│       └── UserException.java
 ├── repository/
 │   ├── UserRepository.java
 │   ├── QueueRepository.java
@@ -129,6 +143,33 @@ When a client joins the queue or gets called, all connected users automatically 
 
 ---
 
+## ❌ Error Responses
+
+All errors return a structured payload:
+
+```json
+{
+  "timestamp": "2026-05-06T03:25:17.405",
+  "status": 404,
+  "error": "QUEUE_NOT_FOUND",
+  "message": "Queue not found"
+}
+```
+
+Responses respect the `Accept-Language` header. Supported languages: `en-US` (default) and `pt-BR`.
+
+| Error | Status | Description |
+|---|---|---|
+| `QUEUE_NOT_FOUND` | 404 | Queue does not exist |
+| `QUEUE_ALREADY_CLOSED` | 409 | Queue is already closed |
+| `QUEUE_IS_CLOSED` | 409 | Queue is not accepting new entries |
+| `QUEUE_NO_USERS_WAITING` | 404 | No users waiting in queue |
+| `USER_ALREADY_IN_QUEUE` | 409 | User is already in this queue |
+| `STAFF_CANNOT_JOIN_QUEUE` | 403 | Staff members cannot join a queue |
+| `USER_NOT_FOUND` | 404 | User does not exist |
+
+---
+
 ## 🔌 REST Endpoints
 
 ### User
@@ -164,7 +205,7 @@ When a client joins the queue or gets called, all connected users automatically 
 ### 1 — Clone the repository
 
 ```bash
-git clone https://github.com/seu-usuario/queuelive.git
+git clone https://github.com/arthsdev/queuelive.git
 cd queuelive
 ```
 

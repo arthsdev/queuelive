@@ -1,10 +1,11 @@
 package br.com.artheus.queuelive.service;
 
-import br.com.artheus.queuelive.dto.QueueRequest;
-import br.com.artheus.queuelive.dto.QueueResponse;
+import br.com.artheus.queuelive.dto.queue.QueueRequest;
+import br.com.artheus.queuelive.dto.queue.QueueResponse;
 import br.com.artheus.queuelive.entity.Queue;
 import br.com.artheus.queuelive.entity.User;
 import br.com.artheus.queuelive.enums.QueueStatus;
+import br.com.artheus.queuelive.exception.domain.QueueException;
 import br.com.artheus.queuelive.repository.QueueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -45,14 +46,14 @@ public class QueueService {
 
     public Queue findById(Long id) {
         return queueRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Queue not found"));
+                .orElseThrow(QueueException::notFound);
     }
 
     public QueueResponse close(Long id) {
         Queue queue = findById(id);
 
-        if (queue.getStatus() == QueueStatus.CLOSED) {
-            throw new RuntimeException("Queue is already closed");
+        if (queue.getStatus().isClosed()) {
+            throw QueueException.alreadyClosed();
         }
 
         // Reflects the closed state in the database before notifying clients via WebSocket
@@ -60,6 +61,7 @@ public class QueueService {
         return toResponse(queueRepository.save(queue));
     }
 
+    @Transactional(readOnly = true)
     public QueueResponse findByIdAsResponse(Long id) {
         return toResponse(findById(id));
     }

@@ -1,9 +1,14 @@
 package br.com.artheus.queuelive.controller;
 
+import br.com.artheus.queuelive.dto.common.ErrorResponse;
 import br.com.artheus.queuelive.dto.user.UserResponse;
 import br.com.artheus.queuelive.entity.User;
 import br.com.artheus.queuelive.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +27,16 @@ public class UserController {
     private final UserService userService;
 
     @Operation(summary = "Get current authenticated user")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User returned successfully",
+                    content = @Content(schema = @Schema(implementation = UserResponse.class))),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized — invalid or missing token",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @GetMapping("/me")
     public ResponseEntity<UserResponse> me(@AuthenticationPrincipal Jwt jwt) {
         User user = userService.syncUser(jwt);

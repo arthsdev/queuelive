@@ -5,6 +5,8 @@ import br.com.artheus.queuelive.dto.queue.QueueResponse;
 import br.com.artheus.queuelive.entity.User;
 import br.com.artheus.queuelive.service.QueueService;
 import br.com.artheus.queuelive.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +21,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/queues")
 @RequiredArgsConstructor
+@Tag(name = "Queues", description = "Queue management endpoints")
 public class QueueController {
 
     private final QueueService queueService;
     private final UserService userService;
 
+    @Operation(summary = "Create a new queue", description = "Only STAFF members can create queues")
     @PostMapping
     @PreAuthorize("hasRole('STAFF')")
     public ResponseEntity<QueueResponse> create(
@@ -34,16 +38,19 @@ public class QueueController {
         return ResponseEntity.ok(queueService.create(request, user));
     }
 
+    @Operation(summary = "List all open queues")
     @GetMapping
     public ResponseEntity<List<QueueResponse>> findAll() {
         return ResponseEntity.ok(queueService.findAllOpen());
     }
 
+    @Operation(summary = "Find a queue by ID")
     @GetMapping("/{id}")
     public ResponseEntity<QueueResponse> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(queueService.findByIdAsResponse(id));
     }
 
+    @Operation(summary = "Close a queue", description = "Only STAFF members can close queues")
     @PatchMapping("/{id}/close")
     @PreAuthorize("hasRole('STAFF')")
     public ResponseEntity<QueueResponse> close(@PathVariable UUID id) {

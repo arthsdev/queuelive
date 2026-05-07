@@ -22,11 +22,12 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     ports:
       - "8180:8080"
-    command: start-dev
+    command: start-dev --import-realm
     depends_on:
       - mysql
     volumes:
       - keycloak_data:/opt/keycloak/data
+      - ./keycloak:/opt/keycloak/data/import
 
 volumes:
   mysql_data:

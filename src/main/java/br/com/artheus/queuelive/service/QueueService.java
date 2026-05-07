@@ -30,14 +30,6 @@ public class QueueService {
     }
 
     @Transactional(readOnly = true)
-    public List<QueueResponse> findAll() {
-        return queueRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
     public List<QueueResponse> findAllOpen() {
         return queueRepository.findByStatus(QueueStatus.OPEN)
                 .stream()

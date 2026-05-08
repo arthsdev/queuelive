@@ -89,7 +89,7 @@ public class QueueEntryService {
         return toResponse(next);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<QueueEntryResponse> findAllByQueue(UUID queueId) {
         return queueEntryRepository.findByQueueIdOrderByPositionAsc(queueId)
                 .stream()
@@ -101,6 +101,7 @@ public class QueueEntryService {
         List<QueueEntry> waiting = queueEntryRepository
                 .findByQueueIdAndStatus(queueId, EntryStatus.WAITING);
 
+        // Recalculates position for each waiting entry to avoid gaps after a CALLED status
         for (int i = 0; i < waiting.size(); i++) {
             waiting.get(i).updatePosition(i + 1);
         }

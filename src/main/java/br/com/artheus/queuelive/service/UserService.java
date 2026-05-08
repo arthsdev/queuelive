@@ -7,6 +7,9 @@ import br.com.artheus.queuelive.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -14,6 +17,7 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    @Transactional
     public User syncUser(Jwt jwt) {
         String email = jwt.getClaimAsString("email");
         String name = jwt.getClaimAsString("name");
@@ -32,16 +36,20 @@ public class UserService {
 
     private String extractRole(Jwt jwt) {
         var realmAccess = jwt.getClaimAsMap("realm_access");
-        if (realmAccess != null && realmAccess.get("roles") instanceof java.util.List<?> roles) {
+
+        if (realmAccess != null && realmAccess.get("roles") instanceof List<?> roles) {
+            // Filters only application roles, ignoring Keycloak internal roles
             return roles.stream()
                     .map(Object::toString)
                     .filter(r -> r.equals("STAFF") || r.equals("CLIENT"))
                     .findFirst()
                     .orElse("CLIENT");
         }
+
         return "CLIENT";
     }
 
+    @Transactional(readOnly = true)
     public UserResponse toResponse(User user) {
         return new UserResponse(
                 user.getId(),

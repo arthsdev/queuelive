@@ -20,6 +20,7 @@ public class QueueService {
 
     private final QueueRepository queueRepository;
 
+    @Transactional
     public QueueResponse create(QueueRequest request, User createdBy) {
         Queue queue = Queue.builder()
                 .name(request.name())
@@ -37,11 +38,13 @@ public class QueueService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public Queue findById(UUID id) {
         return queueRepository.findById(id)
                 .orElseThrow(QueueException::notFound);
     }
 
+    @Transactional
     public QueueResponse close(UUID id) {
         Queue queue = findById(id);
 

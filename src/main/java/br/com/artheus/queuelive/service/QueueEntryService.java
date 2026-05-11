@@ -51,13 +51,13 @@ public class QueueEntryService {
                 .position(position)
                 .build();
 
-        queueEntryRepository.save(entry);
+        QueueEntry savedEntry = queueEntryRepository.save(entry);
 
         // Notifies all connected clients about the queue update
         List<QueueEntryResponse> entries = findAllByQueue(queueId);
         eventPublisher.publishQueueUpdated(queueId, entries);
 
-        return toResponse(entry);
+        return toResponse(savedEntry);
     }
 
     @Transactional

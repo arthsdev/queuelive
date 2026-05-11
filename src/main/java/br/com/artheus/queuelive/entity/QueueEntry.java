@@ -43,8 +43,12 @@ public class QueueEntry {
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.status = EntryStatus.WAITING;
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        if (this.status == null) {
+            this.status = EntryStatus.WAITING;
+        }
     }
 
     public void updatePosition(Integer position) {

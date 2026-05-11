@@ -88,43 +88,43 @@ class QueueControllerTest extends BaseIntegrationTest {
     class CreateQueue {
 
         @Test
-        @DisplayName("deve criar fila quando STAFF")
+        @DisplayName("should create queue when authenticated as STAFF")
         void shouldCreateQueueWhenStaff() {
             postQueues()
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
-                    .bodyValue(new QueueRequest("Caixa 1"))
+                    .bodyValue(new QueueRequest("Counter 1"))
                     .exchange()
                     .expectStatus().isOk()
                     .expectBody(QueueResponse.class)
                     .value(response -> {
                         assertThat(response).isNotNull();
-                        assertThat(response.name()).isEqualTo("Caixa 1");
+                        assertThat(response.name()).isEqualTo("Counter 1");
                         assertThat(response.status()).isEqualTo(QueueStatus.OPEN);
                         assertThat(response.createdBy()).isEqualTo("Staff User");
                     });
         }
 
         @Test
-        @DisplayName("deve retornar 403 sem role STAFF")
+        @DisplayName("should return 403 when user is not STAFF")
         void shouldReturn403WhenNotStaff() {
             postQueues()
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + USER_TOKEN)
-                    .bodyValue(new QueueRequest("Caixa 1"))
+                    .bodyValue(new QueueRequest("Counter 1"))
                     .exchange()
                     .expectStatus().isForbidden();
         }
 
         @Test
-        @DisplayName("deve retornar 401 sem token")
+        @DisplayName("should return 401 when no token is provided")
         void shouldReturn401WhenNoToken() {
             postQueues()
-                    .bodyValue(new QueueRequest("Caixa 1"))
+                    .bodyValue(new QueueRequest("Counter 1"))
                     .exchange()
                     .expectStatus().isUnauthorized();
         }
 
         @Test
-        @DisplayName("deve retornar 400 com nome em branco")
+        @DisplayName("should return 400 when name is blank")
         void shouldReturn400WhenNameIsBlank() {
             postQueues()
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
@@ -139,7 +139,7 @@ class QueueControllerTest extends BaseIntegrationTest {
     class FindAllQueues {
 
         @Test
-        @DisplayName("deve retornar lista de filas abertas")
+        @DisplayName("should return list of open queues")
         void shouldReturnOpenQueues() {
             getQueues()
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + NO_ROLE_TOKEN)
@@ -149,7 +149,7 @@ class QueueControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar 401 sem token")
+        @DisplayName("should return 401 when no token is provided")
         void shouldReturn401WhenNoToken() {
             getQueues()
                     .exchange()
@@ -162,9 +162,9 @@ class QueueControllerTest extends BaseIntegrationTest {
     class FindQueueById {
 
         @Test
-        @DisplayName("deve retornar fila por ID")
+        @DisplayName("should return queue by ID")
         void shouldReturnQueueById() {
-            UUID id = createQueue("Triagem");
+            UUID id = createQueue("Screening");
 
             getQueueById(id)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + NO_ROLE_TOKEN)
@@ -174,12 +174,12 @@ class QueueControllerTest extends BaseIntegrationTest {
                     .value(response -> {
                         assertThat(response).isNotNull();
                         assertThat(response.id()).isEqualTo(id);
-                        assertThat(response.name()).isEqualTo("Triagem");
+                        assertThat(response.name()).isEqualTo("Screening");
                     });
         }
 
         @Test
-        @DisplayName("deve retornar 404 quando fila não existe")
+        @DisplayName("should return 404 when queue does not exist")
         void shouldReturn404WhenQueueNotFound() {
             getQueueById(UUID.randomUUID())
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + NO_ROLE_TOKEN)
@@ -193,9 +193,9 @@ class QueueControllerTest extends BaseIntegrationTest {
     class CloseQueue {
 
         @Test
-        @DisplayName("deve fechar fila quando STAFF")
+        @DisplayName("should close queue when authenticated as STAFF")
         void shouldCloseQueueWhenStaff() {
-            UUID id = createQueue("Senha Normal");
+            UUID id = createQueue("Regular Ticket");
 
             closeQueue(id)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
@@ -209,9 +209,9 @@ class QueueControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar 409 ao fechar fila já fechada")
+        @DisplayName("should return 409 when closing an already closed queue")
         void shouldReturn409WhenAlreadyClosed() {
-            UUID id = createQueue("Senha Prioritária");
+            UUID id = createQueue("Priority Ticket");
 
             closeQueue(id)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
@@ -225,7 +225,7 @@ class QueueControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar 403 sem role STAFF")
+        @DisplayName("should return 403 when user is not STAFF")
         void shouldReturn403WhenNotStaff() {
             closeQueue(UUID.randomUUID())
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + USER_TOKEN)

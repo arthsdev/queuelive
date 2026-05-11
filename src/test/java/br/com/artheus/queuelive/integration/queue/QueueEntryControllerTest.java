@@ -57,13 +57,13 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
                 .role(Role.CLIENT)
                 .build());
 
-        // mock do staff antes de criar a fila
+        // mock staff user before creating the queue
         when(userService.syncUser(any(Jwt.class))).thenReturn(staffUser);
 
         QueueResponse queue = webTestClient.post().uri("/queues")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
-                .bodyValue(new QueueRequest("Fila Test"))
+                .bodyValue(new QueueRequest("Test Queue"))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(QueueResponse.class)
@@ -72,7 +72,7 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
         assertThat(queue).isNotNull();
         queueId = queue.id();
 
-        // depois da criação da fila, muda o mock para clientUser
+        // after queue creation, change the mock to clientUser
         when(userService.syncUser(any(Jwt.class))).thenReturn(clientUser);
     }
 
@@ -102,7 +102,7 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
     class JoinQueue {
 
         @Test
-        @DisplayName("deve entrar na fila como CLIENT")
+        @DisplayName("should join queue as CLIENT")
         void shouldJoinQueueAsClient() {
             joinQueue(queueId)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + NO_ROLE_TOKEN)
@@ -118,7 +118,7 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar 403 quando STAFF tenta entrar na fila")
+        @DisplayName("should return 403 when STAFF tries to join the queue")
         void shouldReturn403WhenStaffJoinsQueue() {
             when(userService.syncUser(any(Jwt.class))).thenReturn(staffUser);
 
@@ -129,7 +129,7 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar 401 sem token")
+        @DisplayName("should return 401 when no token is provided")
         void shouldReturn401WhenNoToken() {
             joinQueue(queueId)
                     .exchange()
@@ -137,7 +137,7 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar 404 quando fila não existe")
+        @DisplayName("should return 404 when queue does not exist")
         void shouldReturn404WhenQueueNotFound() {
             joinQueue(UUID.randomUUID())
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + NO_ROLE_TOKEN)
@@ -146,7 +146,7 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar 409 quando usuário já está na fila")
+        @DisplayName("should return 409 when user is already in the queue")
         void shouldReturn409WhenUserAlreadyInQueue() {
             joinAsClient();
 
@@ -157,9 +157,9 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar 409 quando fila está fechada")
+        @DisplayName("should return 409 when queue is closed")
         void shouldReturn409WhenQueueIsClosed() {
-            // fecha a fila
+            // close the queue
             when(userService.syncUser(any(Jwt.class))).thenReturn(staffUser);
             webTestClient.patch().uri("/queues/" + queueId + "/close")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
@@ -179,7 +179,7 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
     class GetEntries {
 
         @Test
-        @DisplayName("deve retornar entradas da fila")
+        @DisplayName("should return queue entries")
         void shouldReturnQueueEntries() {
             joinAsClient();
 
@@ -196,7 +196,7 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar lista vazia quando não há entradas")
+        @DisplayName("should return an empty list when there are no entries")
         void shouldReturnEmptyWhenNoEntries() {
             getEntries(queueId)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + NO_ROLE_TOKEN)
@@ -207,7 +207,7 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar 401 sem token")
+        @DisplayName("should return 401 when no token is provided")
         void shouldReturn401WhenNoToken() {
             getEntries(queueId)
                     .exchange()
@@ -215,7 +215,7 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar lista vazia quando fila não existe")
+        @DisplayName("should return 200 with an empty list when queue does not exist")
         void shouldReturn200EmptyWhenQueueNotFound() {
             getEntries(UUID.randomUUID())
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + NO_ROLE_TOKEN)
@@ -224,73 +224,73 @@ class QueueEntryControllerTest extends BaseIntegrationTest {
                     .expectBodyList(QueueEntryResponse.class)
                     .value(entries -> assertThat(entries).isEmpty());
         }
+    }
 
-        @Nested
-        @DisplayName("POST /queues/{id}/next")
-        class CallNext {
+    @Nested
+    @DisplayName("POST /queues/{id}/next")
+    class CallNext {
 
-            @Test
-            @DisplayName("deve chamar próximo usuário quando STAFF")
-            void shouldCallNextWhenStaff() {
-                joinAsClient();
+        @Test
+        @DisplayName("should call the next user when authenticated as STAFF")
+        void shouldCallNextWhenStaff() {
+            joinAsClient();
 
-                when(userService.syncUser(any(Jwt.class))).thenReturn(staffUser);
+            when(userService.syncUser(any(Jwt.class))).thenReturn(staffUser);
 
-                callNext(queueId)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
-                        .exchange()
-                        .expectStatus().isOk()
-                        .expectBody(QueueEntryResponse.class)
-                        .value(response -> {
-                            assertThat(response).isNotNull();
-                            assertThat(response.username()).isEqualTo("Client User");
-                            assertThat(response.status()).isEqualTo(EntryStatus.CALLED);
-                        });
-            }
+            callNext(queueId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody(QueueEntryResponse.class)
+                    .value(response -> {
+                        assertThat(response).isNotNull();
+                        assertThat(response.username()).isEqualTo("Client User");
+                        assertThat(response.status()).isEqualTo(EntryStatus.CALLED);
+                    });
+        }
 
-            @Test
-            @DisplayName("deve retornar 403 sem role STAFF")
-            void shouldReturn403WhenNotStaff() {
-                callNext(queueId)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + USER_TOKEN)
-                        .exchange()
-                        .expectStatus().isForbidden();
-            }
+        @Test
+        @DisplayName("should return 403 when user is not STAFF")
+        void shouldReturn403WhenNotStaff() {
+            callNext(queueId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + USER_TOKEN)
+                    .exchange()
+                    .expectStatus().isForbidden();
+        }
 
-            @Test
-            @DisplayName("deve retornar 401 sem token")
-            void shouldReturn401WhenNoToken() {
-                callNext(queueId)
-                        .exchange()
-                        .expectStatus().isUnauthorized();
-            }
+        @Test
+        @DisplayName("should return 401 when no token is provided")
+        void shouldReturn401WhenNoToken() {
+            callNext(queueId)
+                    .exchange()
+                    .expectStatus().isUnauthorized();
+        }
 
-            @Test
-            @DisplayName("deve retornar 404 quando não há usuários esperando")
-            void shouldReturn404WhenNoUsersWaiting() {
-                when(userService.syncUser(any(Jwt.class))).thenReturn(staffUser);
+        @Test
+        @DisplayName("should return 404 when there are no users waiting")
+        void shouldReturn404WhenNoUsersWaiting() {
+            when(userService.syncUser(any(Jwt.class))).thenReturn(staffUser);
 
-                callNext(queueId)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
-                        .exchange()
-                        .expectStatus().isNotFound();
-            }
+            callNext(queueId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
+                    .exchange()
+                    .expectStatus().isNotFound();
+        }
 
-            @Test
-            @DisplayName("deve retornar 409 quando fila está fechada")
-            void shouldReturn409WhenQueueIsClosed() {
-                when(userService.syncUser(any(Jwt.class))).thenReturn(staffUser);
+        @Test
+        @DisplayName("should return 409 when queue is closed")
+        void shouldReturn409WhenQueueIsClosed() {
+            when(userService.syncUser(any(Jwt.class))).thenReturn(staffUser);
 
-                webTestClient.patch().uri("/queues/" + queueId + "/close")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
-                        .exchange()
-                        .expectStatus().isOk();
+            webTestClient.patch().uri("/queues/" + queueId + "/close")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
+                    .exchange()
+                    .expectStatus().isOk();
 
-                callNext(queueId)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
-                        .exchange()
-                        .expectStatus().isEqualTo(409);
-            }
+            callNext(queueId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
+                    .exchange()
+                    .expectStatus().isEqualTo(409);
         }
     }
 }

@@ -29,7 +29,7 @@ class UserControllerTest extends BaseIntegrationTest {
     class GetMe {
 
         @Test
-        @DisplayName("deve retornar usuário autenticado como STAFF")
+        @DisplayName("should return authenticated user as STAFF")
         void shouldReturnAuthenticatedStaffUser() {
             webTestClient.get().uri("/users/me")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
@@ -45,7 +45,7 @@ class UserControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar usuário autenticado como CLIENT")
+        @DisplayName("should return authenticated user as CLIENT")
         void shouldReturnAuthenticatedClientUser() {
             webTestClient.get().uri("/users/me")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + USER_TOKEN)
@@ -61,7 +61,7 @@ class UserControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve criar usuário no banco se não existir")
+        @DisplayName("should create user in database if it does not exist")
         void shouldCreateUserIfNotExists() {
             assertThat(userRepository.findByEmail("staff@queuelive.com")).isEmpty();
 
@@ -74,7 +74,7 @@ class UserControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar mesmo usuário em chamadas subsequentes")
+        @DisplayName("should return the same user on subsequent calls")
         void shouldReturnSameUserOnSubsequentCalls() {
             webTestClient.get().uri("/users/me")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + STAFF_TOKEN)
@@ -92,7 +92,7 @@ class UserControllerTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("deve retornar 401 sem token")
+        @DisplayName("should return 401 when no token is provided")
         void shouldReturn401WhenNoToken() {
             webTestClient.get().uri("/users/me")
                     .exchange()

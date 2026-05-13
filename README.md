@@ -27,6 +27,8 @@
 - 🔄 **Automatic position recalculation** — When the next user is called, all positions are updated without gaps
 - 🌐 **i18n error messages** — Error responses respect the `Accept-Language` header (en-US / pt-BR)
 - 🚫 **Domain exceptions** — Structured error responses with error code, message and HTTP status
+- 🐳 **Fully containerized** — Runs with a single `docker-compose up -d`
+- 🧪 **Tested** — Unit and integration tests with Mockito and Spring Boot Test
 
 ---
 
@@ -58,6 +60,7 @@
 | Real-time | WebSocket (STOMP + SockJS) |
 | Infrastructure | Docker + Docker Compose |
 | Build | Maven |
+| Tests | JUnit 5 + Mockito + Spring Boot Test |
 
 ---
 
@@ -66,8 +69,10 @@
 ```
 src/main/java/br/com/artheus/queuelive/
 ├── config/
+│   ├── CorsConfig.java             # CORS configuration
 │   ├── MessageSourceConfig.java    # i18n configuration
-│   ├── SecurityConfig.java         # Spring Security + OAuth2
+│   ├── SecurityConfig.java         # Spring Security + OAuth2 + JWT decoder
+│   ├── SwaggerConfig.java          # OpenAPI / Swagger documentation
 │   ├── WebSocketConfig.java        # STOMP + SockJS
 │   └── QueueEventPublisher.java    # WebSocket event publishing
 ├── controller/
@@ -75,6 +80,8 @@ src/main/java/br/com/artheus/queuelive/
 │   ├── QueueController.java
 │   └── QueueEntryController.java
 ├── dto/
+│   ├── common/
+│   │   └── ErrorResponse.java
 │   ├── queue/
 │   │   ├── QueueRequest.java
 │   │   ├── QueueResponse.java
@@ -91,7 +98,7 @@ src/main/java/br/com/artheus/queuelive/
 │   ├── QueueStatus.java            # OPEN, CLOSED
 │   └── EntryStatus.java            # WAITING, CALLED, SERVED
 ├── exception/
-│   ├── ApiError.java               # Centralized error keys
+│   ├── ApiError.java               # Centralized error message keys
 │   ├── GlobalExceptionHandler.java # @RestControllerAdvice
 │   ├── base/
 │   │   └── BaseException.java
@@ -101,8 +108,8 @@ src/main/java/br/com/artheus/queuelive/
 │       └── UserException.java
 ├── repository/
 │   ├── UserRepository.java
-│   ├── QueueRepository.java
-│   └── QueueEntryRepository.java
+│   ├── QueueRepository.java        # @EntityGraph to avoid N+1
+│   └── QueueEntryRepository.java   # @EntityGraph to avoid N+1
 └── service/
     ├── UserService.java
     ├── QueueService.java
@@ -122,9 +129,9 @@ When a client joins the queue or gets called, all connected users automatically 
 ```json
 {
   "type": "QUEUE_UPDATED",
-  "queueId": 7,
+  "queueId": "9cf9fbe7-3829-41b5-a2b1-01bbafc5dae2",
   "entries": [
-    { "id": 6, "username": "Client 01", "position": 1, "status": "WAITING" }
+    { "id": "c6fcb002-0785-40f4-8bb5-2f21f5024c2e", "username": "Client 01", "position": 1, "status": "WAITING" }
   ]
 }
 ```
@@ -134,9 +141,9 @@ When a client joins the queue or gets called, all connected users automatically 
 ```json
 {
   "type": "QUEUE_UPDATED",
-  "queueId": 7,
+  "queueId": "9cf9fbe7-3829-41b5-a2b1-01bbafc5dae2",
   "entries": [
-    { "id": 6, "username": "Client 01", "position": 1, "status": "CALLED" }
+    { "id": "c6fcb002-0785-40f4-8bb5-2f21f5024c2e", "username": "Client 01", "position": 1, "status": "CALLED" }
   ]
 }
 ```
@@ -192,6 +199,8 @@ Responses respect the `Accept-Language` header. Supported languages: `en-US` (de
 | GET | `/queues/{id}/entries` | Authenticated | Lists all queue entries |
 | POST | `/queues/{id}/next` | STAFF | Calls the next user in queue |
 
+The full API documentation is available via Swagger UI at [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html).
+
 ---
 
 ## 🚀 Getting Started
@@ -199,8 +208,8 @@ Responses respect the `Accept-Language` header. Supported languages: `en-US` (de
 ### Prerequisites
 
 - Docker and Docker Compose
-- Java 21+
-- Maven
+
+That's it. Everything else runs inside Docker.
 
 ### 1 — Clone the repository
 
@@ -222,15 +231,13 @@ MYSQL_ROOT_PASSWORD=root
 MYSQL_DATABASE=queuelive
 MYSQL_USER=queuelive
 MYSQL_PASSWORD=queuelive123
-DB_URL=jdbc:mysql://localhost:3306/queuelive
 KEYCLOAK_ADMIN=admin
 KEYCLOAK_ADMIN_PASSWORD=admin123
-KEYCLOAK_CLIENT_SECRET=your-client-secret
 KEYCLOAK_REALM=queuelive
-KEYCLOAK_URL=http://localhost:8180
+KEYCLOAK_URL=http://keycloak:8080
 ```
 
-### 3 — Start the infrastructure
+### 3 — Start everything
 
 ```bash
 docker-compose up -d
@@ -238,24 +245,12 @@ docker-compose up -d
 
 This will start:
 - **MySQL** on port `3306`
-- **Keycloak** on port `8180`
+- **Keycloak** on port `8180` — pre-configured with the `queuelive` realm, roles and client
+- **Spring Boot API** on port `8080`
 
-### 4 — Configure Keycloak
+### 4 — Create a user in Keycloak
 
-Access [http://localhost:8180](http://localhost:8180) with `admin / admin123` and:
-
-1. Create a **Realm** named `queuelive`
-2. Create the **Roles**: `CLIENT` and `STAFF`
-3. Create a **Client** named `queuelive-backend` with client authentication enabled
-4. Copy the generated **Client Secret** and update it in your `.env`
-
-### 5 — Run the application
-
-```bash
-mvn spring-boot:run
-```
-
-The API will be available at [http://localhost:8080](http://localhost:8080).
+Access [http://localhost:8180](http://localhost:8180) with your admin credentials and create users with `CLIENT` or `STAFF` roles.
 
 ---
 
@@ -281,18 +276,24 @@ Authorization: Bearer <access_token>
 
 ---
 
+## 🧪 Running Tests
+
+```bash
+mvn test
+```
+
+The test suite includes unit tests for all services with Mockito and integration tests for all controllers with Spring Boot Test.
+
+---
+
 ## 🗺️ Roadmap
 
-Planned features for future versions:
-
-- [ ] Dockerfile to run everything with a single `docker-compose up`
 - [ ] Estimated wait time based on historical average
 - [ ] Restrict users to one active queue at a time
 - [ ] Push notifications when close to being called
 - [ ] Admin dashboard with service metrics
 - [ ] Redis for caching and horizontal scalability
 - [ ] Keycloak backed by external MySQL in production
-- [ ] Unit and integration tests
 - [ ] Full React frontend
 
 ---
